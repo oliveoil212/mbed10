@@ -2,7 +2,7 @@
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
-
+#include "stm32l475e_iot01_accelero.h"
 // GLOBAL VARIABLES
 WiFiInterface *wifi;
 InterruptIn btn2(USER_BUTTON);
@@ -106,23 +106,26 @@ int main() {
             client.yield(100);
             ++num;
     }
-
+BSP_ACCELERO_Init();
+int16_t pDataXYZ[3] = {0};
+    BSP_ACCELERO_AccGetXYZ(pDataXYZ);
     while (1) {
             if (closed) break;
             MQTT::Message message;
 
     // QoS 0
     char buf[100];
-    sprintf(buf, "whiel num = %d", num++);
+    BSP_ACCELERO_AccGetXYZ(pDataXYZ);
+    sprintf(buf, "whiel num = %d, %d %d", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
     message.qos = MQTT::QOS0;
     message.retained = false;
     message.dup = false;
     message.payload = (void*)buf;
     message.payloadlen = strlen(buf)+1;
-    printf("%d\n",++num);
+//     printf("%d\n",++num);
     client.publish(topic, message);
             client.yield(500);
-            ThisThread::sleep_for(500ms);
+            ThisThread::sleep_for(100ms);
     }
 
     printf("Ready to close MQTT Network......\n");
